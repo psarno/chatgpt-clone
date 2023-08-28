@@ -49,6 +49,7 @@ const createAbortController = (res, req, endpointOption, getAbortData) => {
       unfinished: false,
       cancelled: true,
       error: false,
+      isCreatedByUser: false,
     };
 
     saveMessage(responseMessage);
@@ -79,6 +80,7 @@ const handleAbortError = async (res, req, error, data) => {
       cancelled: false,
       error: true,
       text: error.message,
+      isCreatedByUser: false,
     };
     if (abortControllers.has(conversationId)) {
       const { abortController } = abortControllers.get(conversationId);
@@ -89,10 +91,11 @@ const handleAbortError = async (res, req, error, data) => {
     handleError(res, errorMessage);
   };
 
-  if (partialText?.length > 2) {
+  if (partialText && partialText.length > 5) {
     try {
       return await abortMessage(req, res);
     } catch (err) {
+      console.error(err);
       return respondWithError();
     }
   } else {

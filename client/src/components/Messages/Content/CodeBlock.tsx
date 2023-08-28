@@ -51,7 +51,7 @@ const CodeBar: React.FC<CodeBarProps> = React.memo(({ lang, codeRef, plugin = nu
 
 interface CodeBlockProps {
   lang: string;
-  codeChildren: string;
+  codeChildren: React.ReactNode;
   classProp?: string;
   plugin?: boolean;
 }
@@ -66,10 +66,15 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   const language = plugin ? 'json' : lang;
 
   return (
-    <div className="rounded-md bg-black">
+    <div className="w-full rounded-md bg-black text-xs text-white/80">
       <CodeBar lang={lang} codeRef={codeRef} plugin={!!plugin} />
       <div className={cn(classProp, 'overflow-y-auto p-4')}>
-        <code ref={codeRef} className={`hljs !whitespace-pre language-${language}`}>
+        <code
+          ref={codeRef}
+          className={cn(
+            plugin ? '!whitespace-pre-wrap' : `hljs language-${language} !whitespace-pre`,
+          )}
+        >
           {codeChildren}
         </code>
       </div>

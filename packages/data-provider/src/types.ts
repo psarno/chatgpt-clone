@@ -1,4 +1,4 @@
-import type { TPlugin, TMessage, TConversation, TEndpointOption } from './schemas';
+import type { TResPlugin, TMessage, TConversation, TEndpointOption } from './schemas';
 
 export * from './schemas';
 
@@ -7,9 +7,11 @@ export type TMessages = TMessage[];
 export type TMessagesAtom = TMessages | null;
 
 export type TSubmission = {
-  plugin?: TPlugin;
+  plugin?: TResPlugin;
+  plugins?: TResPlugin[];
   message: TMessage;
   isEdited?: boolean;
+  isContinued?: boolean;
   messages: TMessage[];
   isRegenerate?: boolean;
   conversationId?: string;
@@ -37,6 +39,7 @@ export type TError = {
     data?: {
       message?: string;
     };
+    status?: number;
   };
 };
 
@@ -58,6 +61,12 @@ export type TGetConversationsResponse = {
   pageNumber: string;
   pageSize: string | number;
   pages: string | number;
+};
+
+export type TUpdateMessageRequest = {
+  conversationId: string;
+  messageId: string;
+  text: string;
 };
 
 export type TUpdateConversationRequest = {
@@ -151,6 +160,7 @@ export type TResetPassword = {
 export type TStartupConfig = {
   appTitle: string;
   googleLoginEnabled: boolean;
+  facebookLoginEnabled: boolean;
   openidLoginEnabled: boolean;
   githubLoginEnabled: boolean;
   openidLabel: string;

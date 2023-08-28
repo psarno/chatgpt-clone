@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useResetRecoilState, useSetRecoilState } from 'recoil';
 import { SSE, createPayload, tMessageSchema, tConversationSchema } from 'librechat-data-provider';
-import type { TPlugin, TMessage, TConversation, TSubmission } from 'librechat-data-provider';
+import type { TResPlugin, TMessage, TConversation, TSubmission } from 'librechat-data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import store from '~/store';
 
 type TResData = {
-  plugin: TPlugin;
+  plugin: TResPlugin;
   final?: boolean;
   initial?: boolean;
   requestMessage: TMessage;
@@ -28,20 +28,21 @@ export default function useServerStream(submission: TSubmission | null) {
       messages,
       message,
       plugin,
+      plugins,
       initialResponse,
       isRegenerate = false,
-      isEdited = false,
     } = submission;
 
     if (isRegenerate) {
       setMessages([
-        ...(isEdited ? messages.slice(0, -1) : messages),
+        ...messages,
         {
           ...initialResponse,
           text: data,
           parentMessageId: message?.overrideParentMessageId ?? null,
           messageId: message?.overrideParentMessageId + '_',
           plugin: plugin ?? null,
+          plugins: plugins ?? [],
           submitting: true,
           // unfinished: true
         },
@@ -56,6 +57,7 @@ export default function useServerStream(submission: TSubmission | null) {
           parentMessageId: message?.messageId,
           messageId: message?.messageId + '_',
           plugin: plugin ?? null,
+          plugins: plugins ?? [],
           submitting: true,
           // unfinished: true
         },
@@ -65,11 +67,11 @@ export default function useServerStream(submission: TSubmission | null) {
 
   const cancelHandler = (data: TResData, submission: TSubmission) => {
     const { requestMessage, responseMessage, conversation } = data;
-    const { messages, isRegenerate = false, isEdited = false } = submission;
+    const { messages, isRegenerate = false } = submission;
 
     // update the messages
     if (isRegenerate) {
-      setMessages([...(isEdited ? messages.slice(0, -1) : messages), responseMessage]);
+      setMessages([...messages, responseMessage]);
     } else {
       setMessages([...messages, requestMessage, responseMessage]);
     }
@@ -94,17 +96,11 @@ export default function useServerStream(submission: TSubmission | null) {
   };
 
   const createdHandler = (data: TResData, submission: TSubmission) => {
-    const {
-      messages,
-      message,
-      initialResponse,
-      isRegenerate = false,
-      isEdited = false,
-    } = submission;
+    const { messages, message, initialResponse, isRegenerate = false } = submission;
 
     if (isRegenerate) {
       setMessages([
-        ...(isEdited ? messages.slice(0, -1) : messages),
+        ...messages,
         {
           ...initialResponse,
           parentMessageId: message?.overrideParentMessageId ?? null,
@@ -137,11 +133,11 @@ export default function useServerStream(submission: TSubmission | null) {
 
   const finalHandler = (data: TResData, submission: TSubmission) => {
     const { requestMessage, responseMessage, conversation } = data;
-    const { messages, isRegenerate = false, isEdited = false } = submission;
+    const { messages, isRegenerate = false } = submission;
 
     // update the messages
     if (isRegenerate) {
-      setMessages([...(isEdited ? messages.slice(0, -1) : messages), responseMessage]);
+      setMessages([...messages, responseMessage]);
     } else {
       setMessages([...messages, requestMessage, responseMessage]);
     }
@@ -227,7 +223,8 @@ export default function useServerStream(submission: TSubmission | null) {
       const data = JSON.parse(e.data);
 
       if (data.final) {
-        finalHandler(data, { ...submission, message });
+        const { plugins } = data;
+        finalHandler(data, { ...submission, plugins, message });
         console.log('final', data);
       }
       if (data.created) {
@@ -236,16 +233,12 @@ export default function useServerStream(submission: TSubmission | null) {
           overrideParentMessageId: message?.overrideParentMessageId,
         };
         createdHandler(data, { ...submission, message });
-        console.log('created', message);
       } else {
         const text = data.text || data.response;
-        const { initial, plugin } = data;
-        if (initial) {
-          console.log(data);
-        }
+        const { plugin, plugins } = data;
 
         if (data.message) {
-          messageHandler(text, { ...submission, plugin, message });
+          messageHandler(text, { ...submission, plugin, plugins, message });
         }
       }
     };
