@@ -64,7 +64,7 @@ Keep up with the latest updates by visiting the releases page - [Releases](https
   <summary><strong>Getting Started</strong></summary>
 
   * Installation
-    * [Docker Install🐳](docs/install/docker_install.md)
+    * [Docker Compose Install🐳](docs/install/docker_compose_install.md)
     * [Linux Install🐧](docs/install/linux_install.md)
     * [Mac Install🍎](docs/install/mac_install.md)
     * [Windows Install💙](docs/install/windows_install.md)
@@ -104,13 +104,15 @@ Keep up with the latest updates by visiting the releases page - [Releases](https
 <details>
   <summary><strong>Cloud Deployment</strong></summary>
 
-  * [Hetzner](docs/deployment/hetzner_ubuntu.md)
-  * [Heroku](docs/deployment/heroku.md)
+  * [DigitalOcean](docs/deployment/digitalocean.md)
+  * [Azure](docs/deployment/azure-terraform.md)
   * [Linode](docs/deployment/linode.md)
   * [Cloudflare](docs/deployment/cloudflare.md)
   * [Ngrok](docs/deployment/ngrok.md)
+  * [HuggingFace](docs/deployment/huggingface.md)
   * [Render](docs/deployment/render.md)
-  * [Azure](docs/deployment/azure-terraform.md)
+  * [Hetzner](docs/deployment/hetzner_ubuntu.md)
+  * [Heroku](docs/deployment/heroku.md)
 </details>
 
 <details>

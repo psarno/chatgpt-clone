@@ -29,6 +29,10 @@ export default {
   com_ui_showing: 'Mostrando',
   com_ui_of: 'de',
   com_ui_entries: 'Entradas',
+  com_ui_pay_per_call: 'Todas las conversaciones de IA en un solo lugar. Pague por llamada y no por mes.',
+  com_ui_delete: 'Eliminar',
+  com_ui_delete_conversation: '¿Eliminar conversación?',
+  com_ui_delete_conversation_confirm: 'Esto eliminará',
   com_auth_error_login:
     'No se puede iniciar sesión con la información proporcionada. Verifica tus credenciales e intenta nuevamente.',
   com_auth_no_account: '¿No tienes una cuenta?',
@@ -150,7 +154,6 @@ export default {
   com_endpoint_export: 'Exportar',
   com_endpoint_save_as_preset: 'Guardar como Configuración',
   com_endpoint_not_implemented: 'No implementado',
-  com_endpoint_edit_preset: 'Editar Configuración',
   com_endpoint_view_options: 'Ver Opciones',
   com_endpoint_my_preset: 'Mi Configuración',
   com_endpoint_agent_model: 'Modelo del Agente (Recomendado: GPT-3.5)',
