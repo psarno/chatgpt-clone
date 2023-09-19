@@ -4,8 +4,16 @@
 **If you experience any issues after updating, we recommend clearing your browser cache and cookies.**
 Certain changes in the updates may impact cookies, leading to unexpected behaviors if not cleared properly.
 
+## v0.5.9
+
+- It's now required to set a **JWT_REFRESH_SECRET** in your .env file as of [#927](https://github.com/danny-avila/LibreChat/pull/927)
+  - It's also recommended you update your `SESSION_EXPIRY` to a lower value and set `REFRESH_TOKEN_EXPIRY`
+
+  - Default values: session expiry: 15 minutes, refresh token expiry: 7 days
+
+  - *See **[.env.example](https://github.com/danny-avila/LibreChat/blob/1378eb5097b666a4add27923e47be73919957e5b/.env.example#L314)** for exact values in millisecond calculation*
+
 ## v0.5.8
-**If you have issues after updating, please try to clear your browser cache and cookies!**
 
 - It's now required to name manifest JSON files (for [ChatGPT Plugins](..\features\plugins\chatgpt_plugins_openapi.md)) in the `api\app\clients\tools\.well-known` directory after their `name_for_model` property should you add one yourself.
     - This was a recommended convention before, but is now required.

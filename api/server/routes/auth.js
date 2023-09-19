@@ -2,12 +2,13 @@ const express = require('express');
 const {
   resetPasswordRequestController,
   resetPasswordController,
-  // refreshController,
+  refreshController,
   registrationController,
 } = require('../controllers/AuthController');
 const { loginController } = require('../controllers/auth/LoginController');
 const { logoutController } = require('../controllers/auth/LogoutController');
 const {
+  checkBan,
   loginLimiter,
   registerLimiter,
   requireJwtAuth,
@@ -19,9 +20,9 @@ const router = express.Router();
 
 //Local
 router.post('/logout', requireJwtAuth, logoutController);
-router.post('/login', loginLimiter, requireLocalAuth, loginController);
-// router.post('/refresh', requireJwtAuth, refreshController);
-router.post('/register', registerLimiter, validateRegistration, registrationController);
+router.post('/login', loginLimiter, checkBan, requireLocalAuth, loginController);
+router.post('/refresh', refreshController);
+router.post('/register', registerLimiter, checkBan, validateRegistration, registrationController);
 router.post('/requestPasswordReset', resetPasswordRequestController);
 router.post('/resetPassword', resetPasswordController);
 

@@ -52,7 +52,11 @@ export default {
   com_auth_error_login:
     'Unable to login with the information provided. Please check your credentials and try again.',
   com_auth_error_login_rl:
-    'Too many login attempts from this IP in a short amount of time. Please try again later.',
+    'Too many login attempts in a short amount of time. Please try again later.',
+  com_auth_error_login_ban:
+    'Your account has been temporarily banned due to violations of our service.',
+  com_auth_error_login_server:
+    'There was an internal server error. Please wait a few moments and try again.',
   com_auth_no_account: 'Don\'t have an account?',
   com_auth_sign_up: 'Sign up',
   com_auth_sign_in: 'Sign in',
@@ -251,6 +255,7 @@ export default {
   com_nav_setting_general: 'General',
   com_nav_setting_data: 'Data controls',
   com_nav_language: 'Language',
+  com_nav_lang_auto: 'Auto detect',
   com_nav_lang_english: 'English',
   com_nav_lang_chinese: '中文',
   com_nav_lang_german: 'Deutsch',
@@ -260,4 +265,6 @@ export default {
   com_nav_lang_polish: 'Polski',
   com_nav_lang_brazilian_portuguese: 'Português Brasileiro',
   com_nav_lang_russian: 'Русский',
+  com_nav_lang_japanese: '日本語',
+  com_nav_lang_swedish: 'Svenska',
 };
