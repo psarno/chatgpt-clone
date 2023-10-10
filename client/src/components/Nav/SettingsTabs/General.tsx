@@ -86,6 +86,7 @@ export const LangSelector = ({
         <option value="auto">{localize('com_nav_lang_auto')}</option>
         <option value="en-US">{localize('com_nav_lang_english')}</option>
         <option value="zh-CN">{localize('com_nav_lang_chinese')}</option>
+        <option value="zh-TC">{localize('com_nav_lang_traditionalchinese')}</option>
         <option value="de-DE">{localize('com_nav_lang_german')}</option>
         <option value="es-ES">{localize('com_nav_lang_spanish')}</option>
         <option value="fr-FR">{localize('com_nav_lang_french')}</option>
@@ -95,6 +96,7 @@ export const LangSelector = ({
         <option value="ru-RU">{localize('com_nav_lang_russian')}</option>
         <option value="ja-JP">{localize('com_nav_lang_japanese')}</option>
         <option value="sv-SE">{localize('com_nav_lang_swedish')}</option>
+        <option value="ko-KR">{localize('com_nav_lang_korean')}</option>
       </select>
     </div>
   );

@@ -28,7 +28,7 @@ const fetchOpenAIModels = async (opts = { azure: false, plugins: false }, _model
   }
 
   if (reverseProxyUrl) {
-    basePath = reverseProxyUrl.match(/.*v1/)[0];
+    basePath = reverseProxyUrl.match(/.*v1/)?.[0];
   }
 
   const cachedModels = await modelsCache.get(basePath);
@@ -88,12 +88,11 @@ const getOpenAIModels = async (opts = { azure: false, plugins: false }) => {
     return models;
   }
 
-  if (userProvidedOpenAI) {
+  if (userProvidedOpenAI && !OPENROUTER_API_KEY) {
     return models;
   }
 
-  models = await fetchOpenAIModels(opts, models);
-  return models;
+  return await fetchOpenAIModels(opts, models);
 };
 
 const getChatGPTBrowserModels = () => {

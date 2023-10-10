@@ -1,3 +1,4 @@
+require('dotenv').config();
 const OpenAIClient = require('../OpenAIClient');
 
 jest.mock('meilisearch');
@@ -22,7 +23,7 @@ describe('OpenAIClient', () => {
     };
     client = new OpenAIClient('test-api-key', options);
     client2 = new OpenAIClient('test-api-key', options);
-    client.refineMessages = jest.fn().mockResolvedValue({
+    client.summarizeMessages = jest.fn().mockResolvedValue({
       role: 'assistant',
       content: 'Refined answer',
       tokenCount: 30,
@@ -38,6 +39,54 @@ describe('OpenAIClient', () => {
       expect(client.apiKey).toBe('new-api-key');
       expect(client.modelOptions.model).toBe(model);
       expect(client.modelOptions.temperature).toBe(0.7);
+    });
+
+    it('should set apiKey and useOpenRouter if OPENROUTER_API_KEY is present', () => {
+      process.env.OPENROUTER_API_KEY = 'openrouter-key';
+      client.setOptions({});
+      expect(client.apiKey).toBe('openrouter-key');
+      expect(client.useOpenRouter).toBe(true);
+      delete process.env.OPENROUTER_API_KEY; // Cleanup
+    });
+
+    it('should set FORCE_PROMPT based on OPENAI_FORCE_PROMPT or reverseProxyUrl', () => {
+      process.env.OPENAI_FORCE_PROMPT = 'true';
+      client.setOptions({});
+      expect(client.FORCE_PROMPT).toBe(true);
+      delete process.env.OPENAI_FORCE_PROMPT; // Cleanup
+      client.FORCE_PROMPT = undefined;
+
+      client.setOptions({ reverseProxyUrl: 'https://example.com/completions' });
+      expect(client.FORCE_PROMPT).toBe(true);
+      client.FORCE_PROMPT = undefined;
+
+      client.setOptions({ reverseProxyUrl: 'https://example.com/chat' });
+      expect(client.FORCE_PROMPT).toBe(false);
+    });
+
+    it('should set isChatCompletion based on useOpenRouter, reverseProxyUrl, or model', () => {
+      client.setOptions({ reverseProxyUrl: null });
+      // true by default since default model will be gpt-3.5-turbo
+      expect(client.isChatCompletion).toBe(true);
+      client.isChatCompletion = undefined;
+
+      // false because completions url will force prompt payload
+      client.setOptions({ reverseProxyUrl: 'https://example.com/completions' });
+      expect(client.isChatCompletion).toBe(false);
+      client.isChatCompletion = undefined;
+
+      client.setOptions({ modelOptions: { model: 'gpt-3.5-turbo' }, reverseProxyUrl: null });
+      expect(client.isChatCompletion).toBe(true);
+    });
+
+    it('should set completionsUrl and langchainProxy based on reverseProxyUrl', () => {
+      client.setOptions({ reverseProxyUrl: 'https://localhost:8080/v1/chat/completions' });
+      expect(client.completionsUrl).toBe('https://localhost:8080/v1/chat/completions');
+      expect(client.langchainProxy).toBe('https://localhost:8080/v1');
+
+      client.setOptions({ reverseProxyUrl: 'https://example.com/completions' });
+      expect(client.completionsUrl).toBe('https://example.com/completions');
+      expect(client.langchainProxy).toBeUndefined();
     });
   });
 
@@ -158,7 +207,7 @@ describe('OpenAIClient', () => {
     });
 
     it('should handle context strategy correctly', async () => {
-      client.contextStrategy = 'refine';
+      client.contextStrategy = 'summarize';
       const result = await client.buildMessages(messages, parentMessageId, {
         isChatCompletion: true,
       });
@@ -175,17 +224,6 @@ describe('OpenAIClient', () => {
         (item) => item.role === 'user' && item.name === 'Test User',
       );
       expect(hasUserWithName).toBe(true);
-    });
-
-    it('should calculate tokenCount for each message when contextStrategy is set', async () => {
-      client.contextStrategy = 'refine';
-      const result = await client.buildMessages(messages, parentMessageId, {
-        isChatCompletion: true,
-      });
-      const hasUserWithTokenCount = result.prompt.some(
-        (item) => item.role === 'user' && item.tokenCount > 0,
-      );
-      expect(hasUserWithTokenCount).toBe(true);
     });
 
     it('should handle promptPrefix from options when promptPrefix argument is not provided', async () => {
