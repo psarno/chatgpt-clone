@@ -26,6 +26,9 @@ Before running LibreChat with Docker, you need to configure some settings:
 #### [API Keys and Tokens Setup](apis_and_tokens.md) (Required)
 You must set up at least one of these tokens or APIs to run the app.
 
+#### [Manage Your MongoDB Database](../features/manage_your_database.md) (Optional)
+Safely access and manage your MongoDB database using Mongo Express
+
 #### [User Authentication System Setup](../install/user_auth_system.md) (Optional)
 How to set up the user/auth system and Google login.
 
@@ -43,6 +46,30 @@ That's it! If you need more detailed information on configuring your compose fil
 
 ## Updating LibreChat
 - Run `npm run update` from the project directory for a clean installation.
+
+If you're having issues running this command, you can try running what the script does manually:
+
+Prefix commands with `sudo` according to your environment permissions.
+
+```bash
+# Stop the container (if running)
+docker-compose down
+# Fetch the latest changes from Github
+git fetch origin
+# Switch to the repo's main branch
+git checkout main
+# Pull the latest changes to the main branch from Github
+git pull origin main
+# Prune all LibreChat Docker images
+docker rmi librechat:latest
+# Remove all unused dangling Docker images
+docker image prune -f
+# Building a new LibreChat image
+docker-compose build
+
+# Start LibreChat
+docker-compose up
+```
 
 ## Advanced Settings
 

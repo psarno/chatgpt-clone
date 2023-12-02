@@ -9,9 +9,9 @@ const {
   setHeaders,
   validateEndpoint,
   buildEndpointOption,
-} = require('../../middleware');
-const { saveMessage, getConvoTitle, getConvo } = require('../../../models');
-const { sendMessage, createOnProgress } = require('../../utils');
+} = require('~/server/middleware');
+const { saveMessage, getConvoTitle, getConvo } = require('~/models');
+const { sendMessage, createOnProgress } = require('~/server/utils');
 
 router.post('/abort', handleAbort());
 
@@ -33,7 +33,7 @@ router.post('/', validateEndpoint, buildEndpointOption, setHeaders, async (req, 
   let promptTokens;
   let lastSavedTimestamp = 0;
   let saveDelay = 100;
-  const sender = getResponseSender(endpointOption);
+  const sender = getResponseSender({ ...endpointOption, model: endpointOption.modelOptions.model });
   const userMessageId = parentMessageId;
   const user = req.user.id;
 
@@ -119,7 +119,6 @@ router.post('/', validateEndpoint, buildEndpointOption, setHeaders, async (req, 
       response.parentMessageId = overrideParentMessageId;
     }
 
-    await saveMessage({ ...response, user });
     sendMessage(res, {
       title: await getConvoTitle(user, conversationId),
       final: true,
@@ -128,6 +127,9 @@ router.post('/', validateEndpoint, buildEndpointOption, setHeaders, async (req, 
       responseMessage: response,
     });
     res.end();
+
+    await saveMessage({ ...response, user });
+    await saveMessage(userMessage);
 
     // TODO: add anthropic titling
   } catch (error) {

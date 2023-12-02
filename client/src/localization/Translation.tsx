@@ -1,4 +1,5 @@
 import English from './languages/Eng';
+import Arabic from './languages/Ar';
 import Chinese from './languages/Zh';
 import German from './languages/De';
 import Italian from './languages/It';
@@ -11,10 +12,14 @@ import Japanese from './languages/Jp';
 import Swedish from './languages/Sv';
 import Korean from './languages/Ko';
 import TraditionalChinese from './languages/ZhTraditional';
+import Vietnamese from './languages/Vi';
+import Turkish from './languages/Tr';
+import Dutch from './languages/Nl';
 // === import additional language files here === //
 
 const languageMap: { [key: string]: unknown } = {
   'en-US': English,
+  'ar-EG': Arabic,
   'zh-CN': Chinese,
   'de-DE': German,
   'es-ES': Spanish,
@@ -27,6 +32,9 @@ const languageMap: { [key: string]: unknown } = {
   'sv-SE': Swedish,
   'ko-KR': Korean,
   'zh-TC': TraditionalChinese,
+  'vi-VN': Vietnamese,
+  'tr-TR': Turkish,
+  'nl-NL': Dutch,
   // Add additional language mappings here
 };
 

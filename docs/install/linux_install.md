@@ -32,6 +32,9 @@ Here are the steps to follow:
 
 Note: If you run the command on the same computer and want to access it, navigate to `localhost:3080`. You should see a login page where you can create or sign in to your account. Then you can choose an AI model and start chatting.
 
+- [Manage Your MongoDB Database (optional)](../features/manage_your_database.md)
+Safely access and manage your MongoDB database using Mongo Express
+
 Have fun!
 
 ---
@@ -129,6 +132,77 @@ gnome-terminal --tab --title="LibreChat" --working-directory=/home/user/LibreCha
 ## Update the app version
 
 - Run `npm run update` from the project directory for a clean installation.
+
+If you're having issues running this command, you can try running what the script does manually:
+
+Prefix commands with `sudo` according to your environment permissions.
+
+### Docker
+
+```bash
+# Fetch the latest changes from Github
+git fetch origin
+# Switch to the repo's main branch
+git checkout main
+# Pull the latest changes to the main branch from Github
+git pull origin main
+# Prune all LibreChat Docker images
+docker rmi librechat:latest
+# Remove all unused dangling Docker images
+docker image prune -f
+# Building a new LibreChat image
+docker-compose build
+
+# Start LibreChat
+docker-compose up
+```
+
+### Local (npm)
+
+```bash
+# Bash Terminal
+
+# Step 1: Get the latest changes
+
+# Fetch the latest changes from Github
+git fetch origin
+# Switch to the repo's main branch
+git checkout main
+# Pull the latest changes to the main branch from Github
+git pull origin main
+
+# Step 2: Delete all node_modules directories
+# Define the list of directories we will delete
+directories=(
+    "."
+    "./packages/data-provider"
+    "./client"
+    "./api"
+)
+
+# Loop over each directory and delete the node_modules folder if it exists
+for dir in "${directories[@]}"; do
+    nodeModulesPath="$dir/node_modules"
+    if [ -d "$nodeModulesPath" ]; then
+        echo "Deleting node_modules in $dir"
+        rm -rf "$nodeModulesPath"
+    fi
+done
+
+# Step 3: Clean the npm cache
+npm cache clean --force
+
+# Step 4: Install dependencies
+npm ci
+
+# Step 5: Build client-side (frontend) code
+npm run frontend
+
+# Start LibreChat
+npm run backend
+```
+
+The above assumes that you're using the default terminal application on Linux and are executing the commands from the project directory. The commands are written in Bash, which is a common default shell for many Linux distributions. While some systems might use other shells like `zsh` or `fish`, these commands should be compatible with most of them.
 
 ---
 
