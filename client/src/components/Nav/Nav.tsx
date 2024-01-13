@@ -1,15 +1,17 @@
-import {
-  TConversation,
-  useGetConversationsQuery,
-  useSearchQuery,
-  TSearchResults,
-} from 'librechat-data-provider';
+import { useSearchQuery, useGetConversationsQuery } from 'librechat-data-provider/react-query';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAuthContext, useMediaQuery, useConversation, useConversations } from '~/hooks';
+import type { TConversation, TSearchResults } from 'librechat-data-provider';
+import {
+  useAuthContext,
+  useMediaQuery,
+  useConversation,
+  useConversations,
+  useLocalStorage,
+} from '~/hooks';
 import { TooltipProvider, Tooltip } from '~/components/ui';
 import { Conversations, Pages } from '../Conversations';
-import { Spinner } from '~/components';
+import { Spinner } from '~/components/svg';
 import SearchBar from './SearchBar';
 import NavToggle from './NavToggle';
 import NavLinks from './NavLinks';
@@ -25,6 +27,7 @@ export default function Nav({ navVisible, setNavVisible }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollPositionRef = useRef<number | null>(null);
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const [newUser, setNewUser] = useLocalStorage('newUser', true);
 
   useEffect(() => {
     if (isSmallScreen) {
@@ -142,6 +145,9 @@ export default function Nav({ navVisible, setNavVisible }) {
 
   const toggleNavVisible = () => {
     setNavVisible((prev: boolean) => !prev);
+    if (newUser) {
+      setNewUser(false);
+    }
   };
 
   const itemToggleNav = () => {

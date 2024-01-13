@@ -21,6 +21,24 @@
  */
 
 /**
+ * @exports TConfig
+ * @typedef {import('librechat-data-provider').TConfig} TConfig
+ * @memberof typedefs
+ */
+
+/**
+ * @exports TMessage
+ * @typedef {import('librechat-data-provider').TMessage} TMessage
+ * @memberof typedefs
+ */
+
+/**
+ * @exports FileSources
+ * @typedef {import('librechat-data-provider').FileSources} FileSources
+ * @memberof typedefs
+ */
+
+/**
  * @exports ImageMetadata
  * @typedef {Object} ImageMetadata
  * @property {string} file_id - The identifier of the file.
@@ -108,6 +126,32 @@
  * @property {string|null} [assistant_id] - If applicable, the ID of the assistant that authored this message.
  * @property {string|null} [run_id] - If applicable, the ID of the run associated with the authoring of this message.
  * @property {Object} [metadata] - Optional metadata for the message, a map of key-value pairs.
+ * @memberof typedefs
+ */
+
+/**
+ * @exports UserMessageContent
+ * @typedef {Object} UserMessageContent
+ * @property {Object[]} content - The content of the message in an array of text and/or images.
+ * @property {string} content[].type - The type of content, either 'text' or 'image_file'.
+ * @property {Object} [content[].text] - The text content, present if type is 'text'.
+ * @property {string} content[].text.value - The data that makes up the text.
+ * @property {Object} [content[].image_url] - The image file content, present if type is 'image_file'.
+ * @property {string} content[].image_url.url - The File ID of the image in the message content.
+ * @property {'auto' | 'low' | 'high'} content[].image_url.detail: 'auto' - the quality to use for the image, either 'auto', 'low', or 'high'.
+ * @memberof typedefs
+ */
+
+/**
+ * Represents a message payload with various potential properties,
+ * including roles, sender information, and content.
+ *
+ * @typedef {Object} PayloadMessage
+ * @property {string} [role] - The role of the message sender (e.g., 'user', 'assistant').
+ * @property {string} [name] - The name associated with the message.
+ * @property {string} [sender] - The sender of the message.
+ * @property {string} [text] - The text content of the message.
+ * @property {(string|Array<UserMessageContent>)} [content] - The content of the message, which could be a string or an array of the 'content' property from the Message type.
  * @memberof typedefs
  */
 
@@ -237,5 +281,107 @@
 /**
  * @exports OpenAIAssistantAction
  * @typedef {AgentAction & { toolCallId: string; run_id: string; thread_id: string; }} OpenAIAssistantAction
+ * @memberof typedefs
+ */
+
+/**
+ * @exports EndpointServiceConfig
+ * @typedef {Object} EndpointServiceConfig
+ * @property {string} openAIApiKey - The API key for OpenAI.
+ * @property {string} azureOpenAIApiKey - The API key for Azure OpenAI.
+ * @property {boolean} useAzurePlugins - Flag to indicate if Azure plugins are used.
+ * @property {boolean} userProvidedOpenAI - Flag to indicate if OpenAI API key is user provided.
+ * @property {string} googleKey - The Palm key.
+ * @property {boolean|{userProvide: boolean}} [openAI] - Flag to indicate if OpenAI endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [assistant] - Flag to indicate if Assistant endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [azureOpenAI] - Flag to indicate if Azure OpenAI endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [chatGPTBrowser] - Flag to indicate if ChatGPT Browser endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [anthropic] - Flag to indicate if Anthropic endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [bingAI] - Flag to indicate if BingAI endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [google] - Flag to indicate if BingAI endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean, userProvideURL: boolean, name: string}} [custom] - Custom Endpoint configuration.
+ * @memberof typedefs
+ */
+
+/**
+ * @exports Plugin
+ * @typedef {Object} Plugin
+ * @property {string} pluginKey - The key of the plugin.
+ * @property {string} name - The name of the plugin.
+ * @memberof typedefs
+ */
+
+/**
+ * @exports GptPlugins
+ * @typedef {Object} GptPlugins
+ * @property {Plugin[]} plugins - An array of plugins available.
+ * @property {string[]} availableAgents - Available agents, 'classic' or 'functions'.
+ * @property {boolean} userProvide - A flag indicating if the user has provided the data.
+ * @property {boolean} azure - A flag indicating if azure plugins are used.
+ * @memberof typedefs
+ */
+
+/**
+ * @exports DefaultConfig
+ * @typedef {Object} DefaultConfig
+ * @property {boolean|{userProvide: boolean}} [openAI] - Flag to indicate if OpenAI endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [assistant] - Flag to indicate if Assistant endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [azureOpenAI] - Flag to indicate if Azure OpenAI endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [chatGPTBrowser] - Flag to indicate if ChatGPT Browser endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [anthropic] - Flag to indicate if Anthropic endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [bingAI] - Flag to indicate if BingAI endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean}} [google] - Flag to indicate if Google endpoint is user provided, or its configuration.
+ * @property {boolean|{userProvide: boolean, userProvideURL: boolean, name: string}} [custom] - Custom Endpoint configuration.
+ * @property {boolean|GptPlugins} [gptPlugins] - Configuration for GPT plugins.
+ * @memberof typedefs
+ */
+
+/**
+ * @exports EndpointConfig
+ * @typedef {boolean|TConfig} EndpointConfig
+ * @memberof typedefs
+ */
+
+/**
+ * @exports EndpointWithOrder
+ * @typedef {Object} EndpointWithOrder
+ * @property {EndpointConfig} config - The configuration of the endpoint.
+ * @property {number} order - The order of the endpoint.
+ * @memberof typedefs
+ */
+
+/**
+ * @typedef {Object} ModelOptions
+ * @property {string} modelName - The name of the model.
+ * @property {number} [temperature] - The temperature setting for the model.
+ * @property {number} [presence_penalty] - The presence penalty setting.
+ * @property {number} [frequency_penalty] - The frequency penalty setting.
+ * @property {number} [max_tokens] - The maximum number of tokens to generate.
+ * @memberof typedefs
+ */
+
+/**
+ * @typedef {Object} ConfigOptions
+ * @property {string} [basePath] - The base path for the API requests.
+ * @property {Object} [baseOptions] - Base options for the API requests, including headers.
+ * @property {Object} [httpAgent] - The HTTP agent for the request.
+ * @property {Object} [httpsAgent] - The HTTPS agent for the request.
+ * @memberof typedefs
+ */
+
+/**
+ * @typedef {Object} Callbacks
+ * @property {Function} [handleChatModelStart] - A callback function for handleChatModelStart
+ * @property {Function} [handleLLMEnd] - A callback function for handleLLMEnd
+ * @property {Function} [handleLLMError] - A callback function for handleLLMError
+ * @memberof typedefs
+ */
+
+/**
+ * @typedef {Object} AzureOptions
+ * @property {string} [azureOpenAIApiKey] - The Azure OpenAI API key.
+ * @property {string} [azureOpenAIApiInstanceName] - The Azure OpenAI API instance name.
+ * @property {string} [azureOpenAIApiDeploymentName] - The Azure OpenAI API deployment name.
+ * @property {string} [azureOpenAIApiVersion] - The Azure OpenAI API version.
  * @memberof typedefs
  */

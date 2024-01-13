@@ -13,18 +13,29 @@ type TPopoverButton = {
 };
 
 export default function PopoverButtons({
-  endpoint,
   buttonClass,
   iconClass = '',
 }: {
-  endpoint: EModelEndpoint;
   buttonClass?: string;
   iconClass?: string;
 }) {
-  const { optionSettings, setOptionSettings, showAgentSettings, setShowAgentSettings } =
-    useChatContext();
+  const {
+    conversation,
+    optionSettings,
+    setOptionSettings,
+    showAgentSettings,
+    setShowAgentSettings,
+  } = useChatContext();
 
-  const { showExamples, isCodeChat } = optionSettings;
+  const { model, endpoint: _endpoint, endpointType } = conversation ?? {};
+  const endpoint = endpointType ?? _endpoint;
+  const isGenerativeModel = model?.toLowerCase()?.includes('gemini');
+  const isChatModel = !isGenerativeModel && model?.toLowerCase()?.includes('chat');
+  const isTextModel = !isGenerativeModel && !isChatModel && /code|text/.test(model ?? '');
+
+  const { showExamples } = optionSettings;
+  const showExamplesButton = !isGenerativeModel && !isTextModel && isChatModel;
+
   const triggerExamples = () =>
     setOptionSettings((prev) => ({ ...prev, showExamples: !prev.showExamples }));
 
@@ -32,7 +43,7 @@ export default function PopoverButtons({
     [EModelEndpoint.google]: [
       {
         label: (showExamples ? 'Hide' : 'Show') + ' Examples',
-        buttonClass: isCodeChat ? 'disabled' : '',
+        buttonClass: isGenerativeModel || isTextModel ? 'disabled' : '',
         handler: triggerExamples,
         icon: <MessagesSquared className={cn('mr-1 w-[14px]', iconClass)} />,
       },
@@ -42,13 +53,17 @@ export default function PopoverButtons({
         label: `Show ${showAgentSettings ? 'Completion' : 'Agent'} Settings`,
         buttonClass: '',
         handler: () => setShowAgentSettings((prev) => !prev),
-        icon: <GPTIcon className={cn('mr-1 mt-[2px] w-[14px]', iconClass)} size={14} />,
+        icon: <GPTIcon className={cn('mr-1 w-[14px]', iconClass)} size={24} />,
       },
     ],
   };
 
-  const endpointButtons = buttons[endpoint];
+  const endpointButtons = buttons[endpoint ?? ''];
   if (!endpointButtons) {
+    return null;
+  }
+
+  if (endpoint === EModelEndpoint.google && !showExamplesButton) {
     return null;
   }
 

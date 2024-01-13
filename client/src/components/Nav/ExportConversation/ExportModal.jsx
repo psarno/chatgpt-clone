@@ -4,7 +4,7 @@ import { useRecoilCallback } from 'recoil';
 import { useEffect, useState } from 'react';
 import exportFromJSON from 'export-from-json';
 import DialogTemplate from '~/components/ui/DialogTemplate';
-import { useGetMessagesByConvoId } from 'librechat-data-provider';
+import { useGetMessagesByConvoId } from 'librechat-data-provider/react-query';
 import { Dialog, DialogButton, Input, Label, Checkbox, Dropdown } from '~/components/ui/';
 import { cn, defaultTextProps, removeFocusOutlines, cleanupPreset } from '~/utils/';
 import { useScreenshot, useLocalize } from '~/hooks';
@@ -24,7 +24,7 @@ export default function ExportModal({ open, onOpenChange, conversation }) {
 
   const { data: messagesTree = null } = useGetMessagesByConvoId(conversation.conversationId ?? '', {
     select: (data) => {
-      const dataTree = buildTree(data, false);
+      const dataTree = buildTree({ messages: data });
       return dataTree?.length === 0 ? null : dataTree ?? null;
     },
   });
@@ -173,10 +173,6 @@ export default function ExportModal({ open, onOpenChange, conversation }) {
           fieldValues: entries.find((e) => e.fieldName == 'unfinished').fieldValues,
         },
         {
-          fieldName: 'cancelled',
-          fieldValues: entries.find((e) => e.fieldName == 'cancelled').fieldValues,
-        },
-        {
           fieldName: 'messageId',
           fieldValues: entries.find((e) => e.fieldName == 'messageId').fieldValues,
         },
@@ -226,9 +222,6 @@ export default function ExportModal({ open, onOpenChange, conversation }) {
       if (message.unfinished) {
         data += '*(This is an unfinished message)*\n';
       }
-      if (message.cancelled) {
-        data += '*(This is a cancelled message)*\n';
-      }
       data += '\n\n';
     }
 
@@ -274,9 +267,6 @@ export default function ExportModal({ open, onOpenChange, conversation }) {
       }
       if (message.unfinished) {
         data += '(This is an unfinished message)\n';
-      }
-      if (message.cancelled) {
-        data += '(This is a cancelled message)\n';
       }
       data += '\n\n';
     }

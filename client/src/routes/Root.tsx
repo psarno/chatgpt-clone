@@ -1,36 +1,33 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { Outlet, useLocation } from 'react-router-dom';
-import {
-  useGetModelsQuery,
-  useGetPresetsQuery,
-  useGetSearchEnabledQuery,
-} from 'librechat-data-provider';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useGetModelsQuery, useGetSearchEnabledQuery } from 'librechat-data-provider/react-query';
 import type { ContextType } from '~/common';
-import { Nav, MobileNav } from '~/components/Nav';
 import { useAuthContext, useServerStream, useConversation } from '~/hooks';
+import { Nav, MobileNav } from '~/components/Nav';
+import { useGetFiles } from '~/data-provider';
 import store from '~/store';
 
 export default function Root() {
   const location = useLocation();
   const { newConversation } = useConversation();
-  const { user, isAuthenticated } = useAuthContext();
+  const { isAuthenticated } = useAuthContext();
   const [navVisible, setNavVisible] = useState(() => {
     const savedNavVisible = localStorage.getItem('navVisible');
-    return savedNavVisible !== null ? JSON.parse(savedNavVisible) : false;
+    return savedNavVisible !== null ? JSON.parse(savedNavVisible) : true;
   });
 
   const submission = useRecoilValue(store.submission);
   useServerStream(submission ?? null);
 
-  const setPresets = useSetRecoilState(store.presets);
+  const modelsQueryEnabled = useRecoilValue(store.modelsQueryEnabled);
   const setIsSearchEnabled = useSetRecoilState(store.isSearchEnabled);
   const setModelsConfig = useSetRecoilState(store.modelsConfig);
 
+  useGetFiles({ enabled: isAuthenticated });
   const searchEnabledQuery = useGetSearchEnabledQuery({ enabled: isAuthenticated });
-  const modelsQuery = useGetModelsQuery({ enabled: isAuthenticated });
-  const presetsQuery = useGetPresetsQuery({ enabled: !!user });
+  const modelsQuery = useGetModelsQuery({ enabled: isAuthenticated && modelsQueryEnabled });
 
   useEffect(() => {
     localStorage.setItem('navVisible', JSON.stringify(navVisible));
@@ -47,14 +44,6 @@ export default function Root() {
       console.error('Failed to get models', modelsQuery.error);
     }
   }, [modelsQuery.data, modelsQuery.isError]);
-
-  useEffect(() => {
-    if (presetsQuery.data) {
-      setPresets(presetsQuery.data);
-    } else if (presetsQuery.isError) {
-      console.error('Failed to get presets', presetsQuery.error);
-    }
-  }, [presetsQuery.data, presetsQuery.isError]);
 
   useEffect(() => {
     if (searchEnabledQuery.data) {

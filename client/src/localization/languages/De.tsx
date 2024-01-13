@@ -107,7 +107,7 @@ export default {
     'Top-k ändert, wie das Modell Token für die Ausgabe auswählt. Ein Top-k von 1 bedeutet, dass das ausgewählte Token das wahrscheinlichste unter allen Token im Vokabular des Modells ist (auch gierige Dekodierung genannt), während ein Top-k von 3 bedeutet, dass das nächste Token aus den drei wahrscheinlichsten Token ausgewählt wird (unter Verwendung der Temperatur).',
   com_endpoint_google_maxoutputtokens:
     'Maximale Anzahl von Token, die in der Antwort erzeugt werden können. Geben Sie einen niedrigeren Wert für kürzere Antworten und einen höheren Wert für längere Antworten an.',
-  com_endpoint_google_custom_name_placeholder: 'Benutzerdefinierter Name für PaLM2',
+  com_endpoint_google_custom_name_placeholder: 'Benutzerdefinierter Name für Google',
   com_endpoint_google_prompt_prefix_placeholder:
     'Benutzerdefinierte Anweisungen oder Kontext festlegen. Wird ignoriert, wenn leer.',
   com_endpoint_custom_name: 'Benutzerdefinierter Name',
@@ -201,5 +201,4 @@ export default {
   com_nav_settings: 'Einstellungen',
   com_nav_search_placeholder: 'Durchsuche Nachrichten',
   com_nav_setting_general: 'Generell',
-  com_nav_lang_german: 'Deutsch',
 };

@@ -1,14 +1,14 @@
-/* types/schemas/schema helpers */
+/* config */
+export * from './config';
+/* schema helpers  */
+export * from './parsers';
+/* types (exports schemas from `./types` as they contain needed in other defs) */
 export * from './types';
 export * from './types/assistants';
 export * from './types/files';
-/*
- * react query
- * TODO: move to client, or move schemas/types to their own package
- */
-export * from './react-query-service';
+export * from './types/mutations';
+/* query/mutation keys */
 export * from './keys';
-export * from './assistants';
 /* api call helpers */
 export * from './headers-helpers';
 export { default as request } from './request';
