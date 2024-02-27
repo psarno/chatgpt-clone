@@ -1,5 +1,6 @@
 import { useRecoilState } from 'recoil';
 import * as Tabs from '@radix-ui/react-tabs';
+import { SettingsTabValues } from 'librechat-data-provider';
 import React, { useState, useContext, useCallback, useRef } from 'react';
 import { useClearConversationsMutation } from 'librechat-data-provider/react-query';
 import {
@@ -11,10 +12,10 @@ import {
   useLocalStorage,
 } from '~/hooks';
 import type { TDangerButtonProps } from '~/common';
+import HideSidePanelSwitch from './HideSidePanelSwitch';
 import AutoScrollSwitch from './AutoScrollSwitch';
 import { Dropdown } from '~/components/ui';
 import DangerButton from '../DangerButton';
-import ModularChat from './ModularChat';
 import store from '~/store';
 
 export const ThemeSelector = ({
@@ -102,6 +103,7 @@ export const LangSelector = ({
     { value: 'vi-VN', display: localize('com_nav_lang_vietnamese') },
     { value: 'tr-TR', display: localize('com_nav_lang_turkish') },
     { value: 'nl-NL', display: localize('com_nav_lang_dutch') },
+    { value: 'id-ID', display: localize('com_nav_lang_indonesia') },
   ];
 
   return (
@@ -166,7 +168,7 @@ function General() {
 
   return (
     <Tabs.Content
-      value="general"
+      value={SettingsTabValues.GENERAL}
       role="tabpanel"
       className="w-full md:min-h-[300px]"
       ref={contentRef}
@@ -190,7 +192,7 @@ function General() {
           <AutoScrollSwitch />
         </div>
         <div className="border-b pb-3 last-of-type:border-b-0 dark:border-gray-700">
-          <ModularChat />
+          <HideSidePanelSwitch />
         </div>
       </div>
     </Tabs.Content>

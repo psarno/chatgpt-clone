@@ -2,12 +2,13 @@ import { useRecoilValue } from 'recoil';
 import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  useGetConvoIdQuery,
   useGetModelsQuery,
+  useGetStartupConfig,
   useGetEndpointsQuery,
 } from 'librechat-data-provider/react-query';
 import type { TPreset } from 'librechat-data-provider';
 import { useNewConvo, useConfigOverride } from '~/hooks';
+import { useGetConvoIdQuery } from '~/data-provider';
 import ChatView from '~/components/Chat/ChatView';
 import useAuthRedirect from './useAuthRedirect';
 import { Spinner } from '~/components/svg';
@@ -18,6 +19,8 @@ export default function ChatRoute() {
 
   useConfigOverride();
   const { conversationId } = useParams();
+  const { data: startupConfig } = useGetStartupConfig();
+
   const { conversation } = store.useCreateConversationAtom(index);
   const modelsQueryEnabled = useRecoilValue(store.modelsQueryEnabled);
   const { isAuthenticated } = useAuthRedirect();
@@ -29,6 +32,13 @@ export default function ChatRoute() {
     enabled: isAuthenticated && conversationId !== 'new',
   });
   const endpointsQuery = useGetEndpointsQuery({ enabled: isAuthenticated && modelsQueryEnabled });
+
+  useEffect(() => {
+    if (startupConfig?.appTitle) {
+      document.title = startupConfig.appTitle;
+      localStorage.setItem('appTitle', startupConfig.appTitle);
+    }
+  }, [startupConfig]);
 
   useEffect(() => {
     if (
@@ -57,7 +67,7 @@ export default function ChatRoute() {
   }, [initialConvoQuery.data, modelsQuery.data, endpointsQuery.data]);
 
   if (endpointsQuery.isLoading || modelsQuery.isLoading) {
-    return <Spinner className="m-auto dark:text-white" />;
+    return <Spinner className="m-auto text-black dark:text-white" />;
   }
 
   if (!isAuthenticated) {

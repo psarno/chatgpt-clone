@@ -1,14 +1,11 @@
 const OpenAI = require('openai');
 const DALLE3 = require('../DALLE3');
-const { processFileURL } = require('~/server/services/Files/process');
 
 const { logger } = require('~/config');
 
 jest.mock('openai');
 
-jest.mock('~/server/services/Files/process', () => ({
-  processFileURL: jest.fn(),
-}));
+const processFileURL = jest.fn();
 
 jest.mock('~/server/services/Files/images', () => ({
   getImageBasename: jest.fn().mockImplementation((url) => {
@@ -48,6 +45,9 @@ jest.mock('path', () => {
     resolve: jest.fn(),
     join: jest.fn(),
     relative: jest.fn(),
+    extname: jest.fn().mockImplementation((filename) => {
+      return filename.slice(filename.lastIndexOf('.'));
+    }),
   };
 });
 
@@ -66,7 +66,7 @@ describe('DALLE3', () => {
     jest.resetModules();
     process.env = { ...originalEnv, DALLE_API_KEY: mockApiKey };
     // Instantiate DALLE3 for tests that do not depend on DALLE3_SYSTEM_PROMPT
-    dalle = new DALLE3();
+    dalle = new DALLE3({ processFileURL });
   });
 
   afterEach(() => {
@@ -75,7 +75,8 @@ describe('DALLE3', () => {
     process.env = originalEnv;
   });
 
-  it('should throw an error if DALLE_API_KEY is missing', () => {
+  it('should throw an error if all potential API keys are missing', () => {
+    delete process.env.DALLE3_API_KEY;
     delete process.env.DALLE_API_KEY;
     expect(() => new DALLE3()).toThrow('Missing DALLE_API_KEY environment variable.');
   });
@@ -109,7 +110,9 @@ describe('DALLE3', () => {
     };
 
     generate.mockResolvedValue(mockResponse);
-    processFileURL.mockResolvedValue('http://example.com/img-test.png');
+    processFileURL.mockResolvedValue({
+      filepath: 'http://example.com/img-test.png',
+    });
 
     const result = await dalle._call(mockData);
 
@@ -148,7 +151,7 @@ describe('DALLE3', () => {
     await expect(dalle._call(mockData)).rejects.toThrow('Missing required field: prompt');
   });
 
-  it('should log to console if no image name is found in the URL', async () => {
+  it('should log appropriate debug values', async () => {
     const mockData = {
       prompt: 'A test prompt',
     };
@@ -162,9 +165,13 @@ describe('DALLE3', () => {
 
     generate.mockResolvedValue(mockResponse);
     await dalle._call(mockData);
-    expect(logger.debug).toHaveBeenCalledWith('[DALL-E-3] No image name found in the string.', {
+    expect(logger.debug).toHaveBeenCalledWith('[DALL-E-3]', {
       data: { url: 'http://example.com/invalid-url' },
       theImageUrl: 'http://example.com/invalid-url',
+      extension: expect.any(String),
+      imageBasename: expect.any(String),
+      imageExt: expect.any(String),
+      imageName: expect.any(String),
     });
   });
 
