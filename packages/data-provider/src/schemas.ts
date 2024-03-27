@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { TMessageContentParts } from './types/assistants';
+import { Tools } from './types/assistants';
+import type { TMessageContentParts, FunctionTool, FunctionToolCall } from './types/assistants';
 import type { TFile } from './types/files';
 
 export const isUUID = z.string().uuid();
@@ -22,11 +23,28 @@ export const defaultAssistantFormValues = {
   name: '',
   description: '',
   instructions: '',
-  model: 'gpt-3.5-turbo-1106',
+  model: '',
   functions: [],
   code_interpreter: false,
+  image_vision: false,
   retrieval: false,
 };
+
+export const ImageVisionTool: FunctionTool = {
+  type: Tools.function,
+  [Tools.function]: {
+    name: 'image_vision',
+    description: 'Get detailed text descriptions for all current image attachments.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
+};
+
+export const isImageVisionTool = (tool: FunctionTool | FunctionToolCall) =>
+  tool.type === 'function' && tool.function?.name === ImageVisionTool?.function?.name;
 
 export const endpointSettings = {
   [EModelEndpoint.google]: {
@@ -216,8 +234,10 @@ export const tConversationSchema = z.object({
   maxOutputTokens: z.number().optional(),
   agentOptions: tAgentOptionsSchema.nullable().optional(),
   file_ids: z.array(z.string()).optional(),
-  /* vision */
+  /** @deprecated */
   resendImages: z.boolean().optional(),
+  /* vision */
+  resendFiles: z.boolean().optional(),
   imageDetail: eImageDetailSchema.optional(),
   /* assistant */
   assistant_id: z.string().optional(),
@@ -273,7 +293,7 @@ export const openAISchema = tConversationSchema
     top_p: true,
     presence_penalty: true,
     frequency_penalty: true,
-    resendImages: true,
+    resendFiles: true,
     imageDetail: true,
   })
   .transform((obj) => ({
@@ -285,7 +305,7 @@ export const openAISchema = tConversationSchema
     top_p: obj.top_p ?? 1,
     presence_penalty: obj.presence_penalty ?? 0,
     frequency_penalty: obj.frequency_penalty ?? 0,
-    resendImages: obj.resendImages ?? false,
+    resendFiles: typeof obj.resendFiles === 'boolean' ? obj.resendFiles : true,
     imageDetail: obj.imageDetail ?? ImageDetail.auto,
   }))
   .catch(() => ({
@@ -296,7 +316,7 @@ export const openAISchema = tConversationSchema
     top_p: 1,
     presence_penalty: 0,
     frequency_penalty: 0,
-    resendImages: false,
+    resendFiles: true,
     imageDetail: ImageDetail.auto,
   }));
 
@@ -391,6 +411,7 @@ export const anthropicSchema = tConversationSchema
     maxOutputTokens: true,
     topP: true,
     topK: true,
+    resendFiles: true,
   })
   .transform((obj) => ({
     ...obj,
@@ -401,6 +422,7 @@ export const anthropicSchema = tConversationSchema
     maxOutputTokens: obj.maxOutputTokens ?? 4000,
     topP: obj.topP ?? 0.7,
     topK: obj.topK ?? 5,
+    resendFiles: typeof obj.resendFiles === 'boolean' ? obj.resendFiles : true,
   }))
   .catch(() => ({
     model: 'claude-1',
@@ -410,6 +432,7 @@ export const anthropicSchema = tConversationSchema
     maxOutputTokens: 4000,
     topP: 0.7,
     topK: 5,
+    resendFiles: true,
   }));
 
 export const chatGPTBrowserSchema = tConversationSchema
@@ -501,7 +524,7 @@ export const compactOpenAISchema = tConversationSchema
     top_p: true,
     presence_penalty: true,
     frequency_penalty: true,
-    resendImages: true,
+    resendFiles: true,
     imageDetail: true,
   })
   .transform((obj: Partial<TConversation>) => {
@@ -518,8 +541,8 @@ export const compactOpenAISchema = tConversationSchema
     if (newObj.frequency_penalty === 0) {
       delete newObj.frequency_penalty;
     }
-    if (newObj.resendImages !== true) {
-      delete newObj.resendImages;
+    if (newObj.resendFiles === true) {
+      delete newObj.resendFiles;
     }
     if (newObj.imageDetail === ImageDetail.auto) {
       delete newObj.imageDetail;
@@ -568,6 +591,7 @@ export const compactAnthropicSchema = tConversationSchema
     maxOutputTokens: true,
     topP: true,
     topK: true,
+    resendFiles: true,
   })
   .transform((obj) => {
     const newObj: Partial<TConversation> = { ...obj };
@@ -582,6 +606,9 @@ export const compactAnthropicSchema = tConversationSchema
     }
     if (newObj.topK === 5) {
       delete newObj.topK;
+    }
+    if (newObj.resendFiles === true) {
+      delete newObj.resendFiles;
     }
 
     return removeNullishValues(newObj);
