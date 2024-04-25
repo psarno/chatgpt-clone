@@ -1,10 +1,12 @@
 const OpenAI = require('openai');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const {
+  Constants,
   ImageDetail,
   EModelEndpoint,
   resolveHeaders,
   ImageDetailCost,
+  CohereConstants,
   getResponseSender,
   validateVisionModel,
   mapModelToAzureConfig,
@@ -16,7 +18,13 @@ const {
   getModelMaxTokens,
   genAzureChatCompletion,
 } = require('~/utils');
-const { truncateText, formatMessage, createContextHandlers, CUT_OFF_PROMPT } = require('./prompts');
+const {
+  truncateText,
+  formatMessage,
+  CUT_OFF_PROMPT,
+  titleInstruction,
+  createContextHandlers,
+} = require('./prompts');
 const { encodeAndFormat } = require('~/server/services/Files/images/encode');
 const { handleOpenAIErrors } = require('./tools/util');
 const spendTokens = require('~/models/spendTokens');
@@ -39,7 +47,10 @@ class OpenAIClient extends BaseClient {
     super(apiKey, options);
     this.ChatGPTClient = new ChatGPTClient();
     this.buildPrompt = this.ChatGPTClient.buildPrompt.bind(this);
+    /** @type {getCompletion} */
     this.getCompletion = this.ChatGPTClient.getCompletion.bind(this);
+    /** @type {cohereChatCompletion} */
+    this.cohereChatCompletion = this.ChatGPTClient.cohereChatCompletion.bind(this);
     this.contextStrategy = options.contextStrategy
       ? options.contextStrategy.toLowerCase()
       : 'discard';
@@ -48,6 +59,9 @@ class OpenAIClient extends BaseClient {
     this.azure = options.azure || false;
     this.setOptions(options);
     this.metadata = {};
+
+    /** @type {string | undefined} - The API Completions URL */
+    this.completionsUrl;
   }
 
   // TODO: PluginsClient calls this 3x, unneeded
@@ -186,16 +200,6 @@ class OpenAIClient extends BaseClient {
     this.chatGptLabel = this.options.chatGptLabel || 'Assistant';
 
     this.setupTokens();
-
-    if (!this.modelOptions.stop && !this.isVisionModel) {
-      const stopTokens = [this.startToken];
-      if (this.endToken && this.endToken !== this.startToken) {
-        stopTokens.push(this.endToken);
-      }
-      stopTokens.push(`\n${this.userLabel}:`);
-      stopTokens.push('<|diff_marker|>');
-      this.modelOptions.stop = stopTokens;
-    }
 
     if (reverseProxy) {
       this.completionsUrl = reverseProxy;
@@ -533,6 +537,7 @@ class OpenAIClient extends BaseClient {
     return result;
   }
 
+  /** @type {sendCompletion} */
   async sendCompletion(payload, opts = {}) {
     let reply = '';
     let result = null;
@@ -541,7 +546,7 @@ class OpenAIClient extends BaseClient {
     const invalidBaseUrl = this.completionsUrl && extractBaseURL(this.completionsUrl) === null;
     const useOldMethod = !!(invalidBaseUrl || !this.isChatCompletion || typeof Bun !== 'undefined');
     if (typeof opts.onProgress === 'function' && useOldMethod) {
-      await this.getCompletion(
+      const completionResult = await this.getCompletion(
         payload,
         (progressMessage) => {
           if (progressMessage === '[DONE]') {
@@ -574,8 +579,13 @@ class OpenAIClient extends BaseClient {
           opts.onProgress(token);
           reply += token;
         },
+        opts.onProgress,
         opts.abortController || new AbortController(),
       );
+
+      if (completionResult && typeof completionResult === 'string') {
+        reply = completionResult;
+      }
     } else if (typeof opts.onProgress === 'function' || this.options.useChatCompletion) {
       reply = await this.chatCompletion({
         payload,
@@ -586,8 +596,13 @@ class OpenAIClient extends BaseClient {
       result = await this.getCompletion(
         payload,
         null,
+        opts.onProgress,
         opts.abortController || new AbortController(),
       );
+
+      if (result && typeof result === 'string') {
+        return result.trim();
+      }
 
       logger.debug('[OpenAIClient] sendCompletion: result', result);
 
@@ -705,7 +720,10 @@ class OpenAIClient extends BaseClient {
 
     const { OPENAI_TITLE_MODEL } = process.env ?? {};
 
-    const model = this.options.titleModel ?? OPENAI_TITLE_MODEL ?? 'gpt-3.5-turbo';
+    let model = this.options.titleModel ?? OPENAI_TITLE_MODEL ?? 'gpt-3.5-turbo';
+    if (model === Constants.CURRENT_MODEL) {
+      model = this.modelOptions.model;
+    }
 
     const modelOptions = {
       // TODO: remove the gpt fallback and make it specific to endpoint
@@ -760,8 +778,7 @@ class OpenAIClient extends BaseClient {
       const instructionsPayload = [
         {
           role: 'system',
-          content: `Detect user language and write in the same language an extremely concise title for this conversation, which you must accurately detect.
-Write in the detected language. Title in 5 Words or Less. No Punctuation or Quotation. Do not mention the language. All first letters of every word should be capitalized and write the title in User Language only.
+          content: `Please generate ${titleInstruction}
 
 ${convo}
 
@@ -769,10 +786,18 @@ ${convo}
         },
       ];
 
+      const promptTokens = this.getTokenCountForMessage(instructionsPayload[0]);
+
       try {
+        let useChatCompletion = true;
+        if (this.options.reverseProxyUrl === CohereConstants.API_URL) {
+          useChatCompletion = false;
+        }
         title = (
-          await this.sendPayload(instructionsPayload, { modelOptions, useChatCompletion: true })
+          await this.sendPayload(instructionsPayload, { modelOptions, useChatCompletion })
         ).replaceAll('"', '');
+        const completionTokens = this.getTokenCount(title);
+        this.recordTokenUsage({ promptTokens, completionTokens, context: 'title' });
       } catch (e) {
         logger.error(
           '[OpenAIClient] There was an issue generating the title with the completion method',
@@ -820,7 +845,11 @@ ${convo}
 
     // TODO: remove the gpt fallback and make it specific to endpoint
     const { OPENAI_SUMMARY_MODEL = 'gpt-3.5-turbo' } = process.env ?? {};
-    const model = this.options.summaryModel ?? OPENAI_SUMMARY_MODEL;
+    let model = this.options.summaryModel ?? OPENAI_SUMMARY_MODEL;
+    if (model === Constants.CURRENT_MODEL) {
+      model = this.modelOptions.model;
+    }
+
     const maxContextTokens =
       getModelMaxTokens(
         model,
@@ -924,12 +953,12 @@ ${convo}
     }
   }
 
-  async recordTokenUsage({ promptTokens, completionTokens }) {
+  async recordTokenUsage({ promptTokens, completionTokens, context = 'message' }) {
     await spendTokens(
       {
+        context,
         user: this.user,
         model: this.modelOptions.model,
-        context: 'message',
         conversationId: this.conversationId,
         endpointTokenConfig: this.options.endpointTokenConfig,
       },

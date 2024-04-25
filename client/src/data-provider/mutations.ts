@@ -68,6 +68,7 @@ export const useGenTitleMutation = (): UseMutationResult<
           title: response.title,
         } as TConversation);
       });
+      document.title = response.title;
     },
   });
 };
@@ -314,8 +315,7 @@ export const useCreateAssistantMutation = (
           return options?.onSuccess?.(newAssistant, variables, context);
         }
 
-        const currentAssistants = listRes.data;
-        currentAssistants.push(newAssistant);
+        const currentAssistants = [newAssistant, ...JSON.parse(JSON.stringify(listRes.data))];
 
         queryClient.setQueryData<AssistantListResponse>([QueryKeys.assistants, defaultOrderQuery], {
           ...listRes,

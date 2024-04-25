@@ -59,9 +59,11 @@ function NavLinks() {
       <Menu as="div" className="group relative">
         {({ open }) => (
           <>
-            {startupConfig?.checkBalance && balanceQuery.data && (
+            {startupConfig?.checkBalance &&
+              balanceQuery.data &&
+              !isNaN(parseFloat(balanceQuery.data)) && (
               <div className="m-1 ml-3 whitespace-nowrap text-left text-sm text-black dark:text-gray-200">
-                {`Balance: ${balanceQuery.data}`}
+                {`Balance: ${parseFloat(balanceQuery.data).toFixed(2)}`}
               </div>
             )}
             <Menu.Button
@@ -94,7 +96,7 @@ function NavLinks() {
                 className="mt-2 grow overflow-hidden text-ellipsis whitespace-nowrap text-left text-black dark:text-white"
                 style={{ marginTop: '0', marginLeft: '0' }}
               >
-                {user?.name || localize('com_nav_user')}
+                {user?.name || user?.username || localize('com_nav_user')}
               </div>
             </Menu.Button>
 

@@ -1,4 +1,3 @@
-import { useRecoilValue } from 'recoil';
 import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -23,16 +22,18 @@ export default function ChatRoute() {
   const { data: startupConfig } = useGetStartupConfig();
 
   const { conversation } = store.useCreateConversationAtom(index);
-  const modelsQueryEnabled = useRecoilValue(store.modelsQueryEnabled);
   const { isAuthenticated } = useAuthRedirect();
   const { newConversation } = useNewConvo();
   const hasSetConversation = useRef(false);
 
-  const modelsQuery = useGetModelsQuery({ enabled: isAuthenticated && modelsQueryEnabled });
+  const modelsQuery = useGetModelsQuery({
+    enabled: isAuthenticated,
+    refetchOnMount: 'always',
+  });
   const initialConvoQuery = useGetConvoIdQuery(conversationId ?? '', {
     enabled: isAuthenticated && conversationId !== 'new',
   });
-  const endpointsQuery = useGetEndpointsQuery({ enabled: isAuthenticated && modelsQueryEnabled });
+  const endpointsQuery = useGetEndpointsQuery({ enabled: isAuthenticated });
   const { data: assistants = null } = useListAssistantsQuery(defaultOrderQuery, {
     select: (res) =>
       res.data.map(({ id, name, metadata, model }) => ({ id, name, metadata, model })),
@@ -50,14 +51,19 @@ export default function ChatRoute() {
       conversationId === 'new' &&
       endpointsQuery.data &&
       modelsQuery.data &&
+      !modelsQuery.data?.initial &&
       !hasSetConversation.current
     ) {
-      newConversation({ modelsData: modelsQuery.data });
+      newConversation({
+        modelsData: modelsQuery.data,
+        template: conversation ? conversation : undefined,
+      });
       hasSetConversation.current = !!assistants;
     } else if (
       initialConvoQuery.data &&
       endpointsQuery.data &&
       modelsQuery.data &&
+      !modelsQuery.data?.initial &&
       !hasSetConversation.current
     ) {
       newConversation({
@@ -68,10 +74,18 @@ export default function ChatRoute() {
         keepLatestMessage: true,
       });
       hasSetConversation.current = !!assistants;
-    } else if (!hasSetConversation.current && conversationId === 'new' && assistants) {
-      newConversation({ modelsData: modelsQuery.data });
+    } else if (
+      !hasSetConversation.current &&
+      !modelsQuery.data?.initial &&
+      conversationId === 'new' &&
+      assistants
+    ) {
+      newConversation({
+        modelsData: modelsQuery.data,
+        template: conversation ? conversation : undefined,
+      });
       hasSetConversation.current = true;
-    } else if (!hasSetConversation.current && assistants) {
+    } else if (!hasSetConversation.current && !modelsQuery.data?.initial && assistants) {
       newConversation({
         template: initialConvoQuery.data,
         preset: initialConvoQuery.data as TPreset,
@@ -80,8 +94,9 @@ export default function ChatRoute() {
       });
       hasSetConversation.current = true;
     }
+    /* Creates infinite render if all dependencies included due to newConversation invocations exceeding call stack before hasSetConversation.current becomes truthy */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialConvoQuery.data, modelsQuery.data, endpointsQuery.data, assistants]);
+  }, [initialConvoQuery.data, endpointsQuery.data, modelsQuery.data, assistants]);
 
   if (endpointsQuery.isLoading || modelsQuery.isLoading) {
     return <Spinner className="m-auto text-black dark:text-white" />;
