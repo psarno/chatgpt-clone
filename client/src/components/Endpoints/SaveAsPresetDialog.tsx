@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCreatePresetMutation } from 'librechat-data-provider/react-query';
 import type { TEditPresetProps } from '~/common';
-import { cn, defaultTextPropsLabel, removeFocusOutlines, cleanupPreset } from '~/utils/';
+import { cn, removeFocusOutlines, cleanupPreset, defaultTextProps } from '~/utils/';
 import DialogTemplate from '~/components/ui/DialogTemplate';
 import { Dialog, Input, Label } from '~/components/ui/';
 import { NotificationSeverity } from '~/common';
@@ -55,16 +55,16 @@ const SaveAsPresetDialog = ({ open, onOpenChange, preset }: TEditPresetProps) =>
         main={
           <div className="flex w-full flex-col items-center gap-2">
             <div className="grid w-full items-center gap-2">
-              <Label htmlFor="chatGptLabel" className="text-left text-sm font-medium">
+              <Label htmlFor="dialog-preset-name" className="text-left text-sm font-medium">
                 {localize('com_endpoint_preset_name')}
               </Label>
               <Input
-                id="chatGptLabel"
+                id="chatGpt"
                 value={title || ''}
                 onChange={(e) => setTitle(e.target.value || '')}
                 placeholder="Set a custom name for this preset"
                 className={cn(
-                  defaultTextPropsLabel,
+                  defaultTextProps,
                   'flex h-10 max-h-10 w-full resize-none border-gray-100 px-3 py-2 dark:border-gray-600',
                   removeFocusOutlines,
                 )}

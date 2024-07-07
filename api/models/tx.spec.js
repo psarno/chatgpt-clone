@@ -41,6 +41,20 @@ describe('getValueKey', () => {
     expect(getValueKey('gpt-4-turbo')).toBe('gpt-4-1106');
     expect(getValueKey('gpt-4-0125')).toBe('gpt-4-1106');
   });
+
+  it('should return "gpt-4o" for model type of "gpt-4o"', () => {
+    expect(getValueKey('gpt-4o-2024-05-13')).toBe('gpt-4o');
+    expect(getValueKey('openai/gpt-4o')).toBe('gpt-4o');
+    expect(getValueKey('gpt-4o-turbo')).toBe('gpt-4o');
+    expect(getValueKey('gpt-4o-0125')).toBe('gpt-4o');
+  });
+
+  it('should return "claude-3-5-sonnet" for model type of "claude-3-5-sonnet-"', () => {
+    expect(getValueKey('claude-3-5-sonnet-20240620')).toBe('claude-3-5-sonnet');
+    expect(getValueKey('anthropic/claude-3-5-sonnet')).toBe('claude-3-5-sonnet');
+    expect(getValueKey('claude-3-5-sonnet-turbo')).toBe('claude-3-5-sonnet');
+    expect(getValueKey('claude-3-5-sonnet-0125')).toBe('claude-3-5-sonnet');
+  });
 });
 
 describe('getMultiplier', () => {
@@ -80,6 +94,17 @@ describe('getMultiplier', () => {
       tokenValues['gpt-4-1106'].prompt,
     );
     expect(getMultiplier({ valueKey: 'gpt-4-1106', tokenType: 'completion' })).toBe(
+      tokenValues['gpt-4-1106'].completion,
+    );
+  });
+
+  it('should return the correct multiplier for gpt-4o', () => {
+    const valueKey = getValueKey('gpt-4o-2024-05-13');
+    expect(getMultiplier({ valueKey, tokenType: 'prompt' })).toBe(tokenValues['gpt-4o'].prompt);
+    expect(getMultiplier({ valueKey, tokenType: 'completion' })).toBe(
+      tokenValues['gpt-4o'].completion,
+    );
+    expect(getMultiplier({ valueKey, tokenType: 'completion' })).not.toBe(
       tokenValues['gpt-4-1106'].completion,
     );
   });

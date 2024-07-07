@@ -10,6 +10,7 @@ module.exports = {
   async saveMessage({
     user,
     endpoint,
+    iconURL,
     messageId,
     newMessageId,
     conversationId,
@@ -35,6 +36,7 @@ module.exports = {
 
       const update = {
         user,
+        iconURL,
         endpoint,
         messageId: newMessageId || messageId,
         conversationId,
@@ -55,23 +57,37 @@ module.exports = {
       if (files) {
         update.files = files;
       }
-      // may also need to update the conversation here
-      await Message.findOneAndUpdate({ messageId }, update, { upsert: true, new: true });
 
-      return {
-        messageId,
-        conversationId,
-        parentMessageId,
-        sender,
-        text,
-        isCreatedByUser,
-        tokenCount,
-      };
+      const message = await Message.findOneAndUpdate({ messageId }, update, {
+        upsert: true,
+        new: true,
+      });
+
+      return message.toObject();
     } catch (err) {
       logger.error('Error saving message:', err);
       throw new Error('Failed to save message.');
     }
   },
+
+  async bulkSaveMessages(messages) {
+    try {
+      const bulkOps = messages.map((message) => ({
+        updateOne: {
+          filter: { messageId: message.messageId },
+          update: message,
+          upsert: true,
+        },
+      }));
+
+      const result = await Message.bulkWrite(bulkOps);
+      return result;
+    } catch (err) {
+      logger.error('Error saving messages in bulk:', err);
+      throw new Error('Failed to save messages in bulk.');
+    }
+  },
+
   /**
    * Records a message in the database.
    *
@@ -106,6 +122,14 @@ module.exports = {
     } catch (err) {
       logger.error('Error saving message:', err);
       throw new Error('Failed to save message.');
+    }
+  },
+  async updateMessageText({ messageId, text }) {
+    try {
+      await Message.updateOne({ messageId }, { text });
+    } catch (err) {
+      logger.error('Error updating message text:', err);
+      throw new Error('Failed to update message text.');
     }
   },
   async updateMessage(message) {
@@ -150,8 +174,18 @@ module.exports = {
     }
   },
 
-  async getMessages(filter) {
+  /**
+   * Retrieves messages from the database.
+   * @param {Record<string, unknown>} filter
+   * @param {string | undefined} [select]
+   * @returns
+   */
+  async getMessages(filter, select) {
     try {
+      if (select) {
+        return await Message.find(filter).select(select).sort({ createdAt: 1 }).lean();
+      }
+
       return await Message.find(filter).sort({ createdAt: 1 }).lean();
     } catch (err) {
       logger.error('Error getting messages:', err);
